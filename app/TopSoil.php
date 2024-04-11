@@ -14,6 +14,7 @@ class TopSoil
     private string $currency = '£';
     private array $validLengthWidthMeasurements = ['metres', 'feet', 'yards'];
     private array $validDepthMeasurements = ['centimetres', 'inches'];
+    private ?object $mysqli;
 
     /**
      * Set the length measurement
@@ -70,7 +71,35 @@ class TopSoil
 
     public function saveToDb()
     {
+        $this->connectToDb();
+        $stmt = $this->mysqli->prepare(
+            "INSERT INTO topsoil (length_width_unit,depth_unit,length,width,depth,bags_needed,cost) VALUES(?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("ssddddd",
+            $this->lengthWidthMeasurementUnit,
+            $this->depthMeasurementUnit,
+            $this->length,
+            $this->width,
+            $this->depth,
+            $this->bagsNeeded,
+            $this->totalBagCost,
+        );
+        $stmt->execute();
+    }
 
+    private function connectToDb()
+    {
+        // Basic connection settings
+        $databaseHost     = getenv('HOSTNAME');
+        $databaseUsername = getenv('USERNAME');
+        $databasePassword = getenv('PASSWORD');
+        $databaseName     = getenv('DATABASE');
+
+        // Connect to the database
+        $mysqli = mysqli_connect($databaseHost, $databaseUsername, $databasePassword, $databaseName);
+        if ($mysqli) {
+            $this->mysqli = $mysqli;
+        }
     }
 
     public function getLengthInMetres(): float
